@@ -28,14 +28,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
-import org.apache.commons.fileupload.FileItem;
-
+import org.apache.commons.fileupload2.core.FileItem;
 /**
  * <p>Class used to manipulate the data received in the server side.</p>
  *
@@ -82,8 +81,9 @@ public class UploadAction extends UploadServlet {
    * @param sessionFiles collection of fields sent by the client
    * @param fieldName field name
    * @return the string value
+ * @throws IOException 
    */
-  public static String getFormField(List<FileItem> sessionFiles, String fieldName) {
+  public static String getFormField(List<FileItem> sessionFiles, String fieldName) throws IOException {
     FileItem item = findItemByFieldName(sessionFiles, fieldName);
     return item == null || item.isFormField() == false ? null : item.getString();
   }
