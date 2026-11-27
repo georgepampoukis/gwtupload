@@ -16,40 +16,6 @@
  */
 package gwtupload.server;
 
-import org.apache.commons.fileupload2.core.FileItem;
-import org.apache.commons.fileupload2.core.FileItemFactory;
-import org.apache.commons.fileupload2.core.FileUploadException;
-import org.apache.commons.fileupload2.core.FileUploadByteCountLimitException;
-import org.apache.commons.fileupload2.core.DiskFileItem;
-import org.apache.commons.fileupload2.core.DiskFileItemFactory;
-
-import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
-import org.apache.commons.io.IOUtils;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.ResourceBundle;
-
-import jakarta.servlet.Servlet;
-import jakarta.servlet.ServletConfig;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
-
-import static gwtupload.shared.UConsts.MULTI_SUFFIX;
-import static gwtupload.shared.UConsts.PARAM_DELAY;
 import static gwtupload.shared.UConsts.TAG_BLOBSTORE;
 import static gwtupload.shared.UConsts.TAG_BLOBSTORE_PATH;
 import static gwtupload.shared.UConsts.TAG_CANCELED;
@@ -75,12 +41,41 @@ import static gwtupload.shared.UConsts.TAG_SIZE;
 import static gwtupload.shared.UConsts.TAG_TOTAL_BYTES;
 import static gwtupload.shared.UConsts.TAG_VALUE;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.ResourceBundle;
+
+import org.apache.commons.fileupload2.core.DiskFileItem;
+import org.apache.commons.fileupload2.core.DiskFileItemFactory;
+import org.apache.commons.fileupload2.core.FileItem;
+import org.apache.commons.fileupload2.core.FileItemFactory;
+import org.apache.commons.fileupload2.core.FileUploadByteCountLimitException;
+import org.apache.commons.fileupload2.jakarta.servlet6.JakartaServletFileUpload;
+import org.apache.commons.io.IOUtils;
+
 import gwtupload.server.exceptions.UploadActionException;
 import gwtupload.server.exceptions.UploadCanceledException;
 import gwtupload.server.exceptions.UploadException;
 import gwtupload.server.exceptions.UploadSizeLimitException;
 import gwtupload.server.exceptions.UploadTimeoutException;
 import gwtupload.shared.UConsts;
+import jakarta.servlet.Servlet;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * <p>
@@ -521,17 +516,16 @@ public class UploadServlet extends HttpServlet implements Servlet
 	 */
 	protected static void renderXmlResponse(HttpServletRequest request, HttpServletResponse response, String message, boolean post) throws IOException
 	{
-		String contentType = post ? "text/plain" : "text/html";
-
-		String xml = XML_TPL.replace("%%MESSAGE%%", message != null ? message : "");
-		if (post)
-		{
-			xml = TAG_MSG_START + xml.replaceAll("<", TAG_MSG_LT).replaceAll(">", TAG_MSG_GT) + TAG_MSG_END;
-		}
-
-		renderMessage(response, xml, contentType);
+	    String contentType = "text/plain";
+	    response.setHeader("X-Content-Type-Options", "nosniff");
+	    String xml = XML_TPL.replace("%%MESSAGE%%", message != null ? message : "");
+	    if (post)
+	    {
+	        xml = TAG_MSG_START + xml.replaceAll("<", TAG_MSG_LT).replaceAll(">", TAG_MSG_GT) + TAG_MSG_END;
+	    }
+	    renderMessage(response, xml, contentType);
 	}
-
+	
 	protected static void renderXmlResponse(HttpServletRequest request, HttpServletResponse response, String message) throws IOException
 	{
 		renderXmlResponse(request, response, message, false);
@@ -609,7 +603,9 @@ public class UploadServlet extends HttpServlet implements Servlet
 		{
 			logger.error("UPLOAD-SERVLET (" + request.getSession().getId() + ") getUploadedFile: " + parameter + " returning: " + item.getContentType() + ", " + item.getName()
 					+ ", " + item.getSize() + " bytes");
-			response.setContentType(item.getContentType());
+			response.setContentType("application/octet-stream");
+			response.setHeader("Content-Disposition", "attachment");
+			response.setHeader("X-Content-Type-Options", "nosniff");
 			copyFromInputStreamToOutputStream(item.getInputStream(), response.getOutputStream());
 		}
 		else
@@ -813,17 +809,28 @@ public class UploadServlet extends HttpServlet implements Servlet
 
 	protected String statusToString(Map<String, String> stat)
 	{
-		String message = "";
-		for(Entry<String, String> e: stat.entrySet())
-		{
-			if (e.getValue() != null)
-			{
-				String k = e.getKey();
-				String v = e.getValue().replaceAll("</*pre>", "").replaceAll("&lt;", "<").replaceAll("&gt;", ">");
-				message += "<" + k + ">" + v + "</" + k + ">\n";
-			}
-		}
-		return message;
+	    String message = "";
+	    for (Entry<String, String> e : stat.entrySet())
+	    {
+	        if (e.getValue() != null)
+	        {
+	            String k = e.getKey();
+	            String v = e.getValue();
+	            if (!TAG_FILE.equals(k) && !TAG_FILES.equals(k) && !TAG_PARAM.equals(k) && !TAG_PARAMS.equals(k))
+	            {
+	                v = escapeXml(v);
+	            }
+	            message += "<" + k + ">" + v + "</" + k + ">\n";
+	        }
+	    }
+	    return message;
+	}
+	
+	protected static String escapeXml(String value)
+	{
+	    if (value == null)
+	        return "";
+	    return value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;").replace("'", "&apos;");
 	}
 
 	/**
@@ -865,13 +872,13 @@ public class UploadServlet extends HttpServlet implements Servlet
 		}
 		catch (UploadSizeLimitException e)
 		{
-			renderXmlResponse(request, response, "<" + TAG_ERROR + ">" + e.getMessage() + "</" + TAG_ERROR + ">", true);
+		    renderXmlResponse(request, response, "<" + TAG_ERROR + ">" + escapeXml(e.getMessage()) + "</" + TAG_ERROR + ">", true);
 		}
 		catch (Exception e)
 		{
-			logger.error("UPLOAD-SERVLET (" + request.getSession().getId() + ") Exception -> " + e.getMessage() + "\n" + stackTraceToString(e));
-			error = e.getMessage();
-			renderXmlResponse(request, response, "<" + TAG_ERROR + ">" + error + "</" + TAG_ERROR + ">", true);
+		    logger.error("UPLOAD-SERVLET (" + request.getSession().getId() + ") Exception -> " + e.getMessage() + "\n" + stackTraceToString(e));
+		    error = e.getMessage();
+		    renderXmlResponse(request, response, "<" + TAG_ERROR + ">" + escapeXml(error) + "</" + TAG_ERROR + ">", true);
 		}
 		finally
 		{
@@ -1093,16 +1100,6 @@ public class UploadServlet extends HttpServlet implements Servlet
 	 */
 	protected String parsePostRequest(HttpServletRequest request, HttpServletResponse response)
 	{
-
-		try
-		{
-			String delay = request.getParameter(PARAM_DELAY);
-			uploadDelay = Integer.parseInt(delay);
-		}
-		catch (Exception e)
-		{
-		}
-
 		HttpSession session = request.getSession();
 
 		logger.debug("UPLOAD-SERVLET (" + session.getId() + ") new upload request received.");

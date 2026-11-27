@@ -35,189 +35,236 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.apache.commons.fileupload2.core.FileItem;
+
 /**
- * <p>Class used to manipulate the data received in the server side.</p>
+ * <p>
+ * Class used to manipulate the data received in the server side.
+ * </p>
  *
- * The user has to implement the method executeAction which receives the list of the FileItems
- * sent to the server. Each FileItem represents a file or a form field.
+ * The user has to implement the method executeAction which receives the list of
+ * the FileItems sent to the server. Each FileItem represents a file or a form
+ * field.
  *
- * <p>Note: Temporary files are not deleted until the user calls removeSessionFiles(request).</p>
+ * <p>
+ * Note: Temporary files are not deleted until the user calls
+ * removeSessionFiles(request).
+ * </p>
  *
  * @author Manolo Carrasco Moñino
  *
  */
-public class UploadAction extends UploadServlet {
-  private static final long serialVersionUID = -6790246163691420791L;
+public class UploadAction extends UploadServlet
+{
+	private static final long serialVersionUID = -6790246163691420791L;
 
-  private boolean removeSessionFiles = false;
-  private boolean removeData = false;
+	private boolean removeSessionFiles = false;
+	private boolean removeData = false;
 
-  @Override
-  public void init(ServletConfig config) throws ServletException {
-    super.init(config);
-    ServletContext ctx = config.getServletContext();
-    removeSessionFiles = Boolean.valueOf(ctx.getInitParameter("removeSessionFiles"));
-    removeData = Boolean.valueOf(ctx.getInitParameter("removeData"));
+	@Override
+	public void init(ServletConfig config) throws ServletException
+	{
+		super.init(config);
+		ServletContext ctx = config.getServletContext();
+		removeSessionFiles = Boolean.valueOf(ctx.getInitParameter("removeSessionFiles"));
+		removeData = Boolean.valueOf(ctx.getInitParameter("removeData"));
 
-    logger.info("UPLOAD-ACTION init: removeSessionFiles=" + removeSessionFiles + ", removeData=" + removeData);
-  }
+		logger.info("UPLOAD-ACTION init: removeSessionFiles=" + removeSessionFiles + ", removeData=" + removeData);
+	}
 
-  /**
-   * Returns the content of a file as an InputStream if it is found in the
-   * FileItem vector.
-   *
-   * @param sessionFiles collection of files sent by the client
-   * @param parameter field name or file name of the desired file
-   * @return an ImputString
-   */
-  public static InputStream getFileStream(List<FileItem> sessionFiles, String parameter) throws IOException {
-    FileItem item = findFileItem(sessionFiles, parameter);
-    return item == null ? null : item.getInputStream();
-  }
+	/**
+	 * Returns the content of a file as an InputStream if it is found in the
+	 * FileItem vector.
+	 *
+	 * @param sessionFiles
+	 *            collection of files sent by the client
+	 * @param parameter
+	 *            field name or file name of the desired file
+	 * @return an ImputString
+	 */
+	public static InputStream getFileStream(List<FileItem> sessionFiles, String parameter) throws IOException
+	{
+		FileItem item = findFileItem(sessionFiles, parameter);
+		return item == null ? null : item.getInputStream();
+	}
 
-  /**
-   * Returns the value of a text field present in the FileItem collection.
-   *
-   * @param sessionFiles collection of fields sent by the client
-   * @param fieldName field name
-   * @return the string value
- * @throws IOException 
-   */
-  public static String getFormField(List<FileItem> sessionFiles, String fieldName) throws IOException {
-    FileItem item = findItemByFieldName(sessionFiles, fieldName);
-    return item == null || item.isFormField() == false ? null : item.getString();
-  }
+	/**
+	 * Returns the value of a text field present in the FileItem collection.
+	 *
+	 * @param sessionFiles
+	 *            collection of fields sent by the client
+	 * @param fieldName
+	 *            field name
+	 * @return the string value
+	 * @throws IOException
+	 */
+	public static String getFormField(List<FileItem> sessionFiles, String fieldName) throws IOException
+	{
+		FileItem item = findItemByFieldName(sessionFiles, fieldName);
+		return item == null || item.isFormField() == false ? null : item.getString();
+	}
 
-  /**
-   * This method is called when all data is received in the server.
-   *
-   * Temporary files are not deleted until the user calls removeSessionFileItems(request)
-   *
-   * Override this method to customize the behavior
-   *
-   * @param request
-   * @param sessionFiles
-   *
-   * @return the text/html message to be sent to the client.
-   *         In the case of null the standard response configured for this
-   *         action will be sent.
-   *
-   * @throws UploadActionException
-   *         In the case of error
-   *
-   */
-  public String executeAction(HttpServletRequest request, List<FileItem> sessionFiles) throws UploadActionException {
-    return null;
-  }
+	/**
+	 * This method is called when all data is received in the server.
+	 *
+	 * Temporary files are not deleted until the user calls
+	 * removeSessionFileItems(request)
+	 *
+	 * Override this method to customize the behavior
+	 *
+	 * @param request
+	 * @param sessionFiles
+	 *
+	 * @return the text/html message to be sent to the client. In the case of
+	 *         null the standard response configured for this action will be
+	 *         sent.
+	 *
+	 * @throws UploadActionException
+	 *             In the case of error
+	 *
+	 */
+	public String executeAction(HttpServletRequest request, List<FileItem> sessionFiles) throws UploadActionException
+	{
+		return null;
+	}
 
-  /**
-   * This method is called when a received file is requested to be removed and
-   * is in the collection of items stored in session.
-   * If the item does't exist in session this method is not called
-   *
-   * After it, the item is removed from the session items collection.
-   *
-   * Override this method to customize the behavior
-   *
-   * @param request
-   * @param item    The item in session
-   *
-   * @throws UploadActionException
-   *         In the case of an error, the exception message is returned to
-   *         the client and the item is not deleted from session
-   *
-   */
-  public void removeItem(HttpServletRequest request, FileItem item)  throws UploadActionException {
-  }
+	/**
+	 * This method is called when a received file is requested to be removed and
+	 * is in the collection of items stored in session. If the item does't exist
+	 * in session this method is not called
+	 *
+	 * After it, the item is removed from the session items collection.
+	 *
+	 * Override this method to customize the behavior
+	 *
+	 * @param request
+	 * @param item
+	 *            The item in session
+	 *
+	 * @throws UploadActionException
+	 *             In the case of an error, the exception message is returned to
+	 *             the client and the item is not deleted from session
+	 *
+	 */
+	public void removeItem(HttpServletRequest request, FileItem item) throws UploadActionException
+	{
+	}
 
-  /**
-   * This method is called when a received file is requested to be removed.
-   * After it, the item is removed from the session items collection.
-   *
-   * Override this method to customize the behavior
-   *
-   * @param request
-   * @param fieldName    The name of the filename input
-   *
-   * @throws UploadActionException
-   *         In the case of an error, the exception message is returned to
-   *         the client and the item is not deleted from session
-   *
-   */
-  public void removeItem(HttpServletRequest request, String fieldName)  throws UploadActionException {
-  }
+	/**
+	 * This method is called when a received file is requested to be removed.
+	 * After it, the item is removed from the session items collection.
+	 *
+	 * Override this method to customize the behavior
+	 *
+	 * @param request
+	 * @param fieldName
+	 *            The name of the filename input
+	 *
+	 * @throws UploadActionException
+	 *             In the case of an error, the exception message is returned to
+	 *             the client and the item is not deleted from session
+	 *
+	 */
+	public void removeItem(HttpServletRequest request, String fieldName) throws UploadActionException
+	{
+	}
 
-  protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException  {
-    String parameter = request.getParameter(UConsts.PARAM_REMOVE);
-    if (parameter != null) {
-      try {
-        // Notify classes extending this that they have to remove the item.
-        removeItem(request, parameter);
-        // Other way to notify classes extending this.
-        FileItem item = super.findFileItem(getMySessionFileItems(request), parameter);
-        if (item != null) {
-          removeItem(request, item);
-        }
-      } catch (Exception e) {
-        renderXmlResponse(request, response, "<" + TAG_ERROR + ">" + e.getMessage() + "</" + TAG_ERROR + ">");
-        return;
-      }
-      // Remove the item saved in session in the case it was not removed yet
-      super.removeUploadedFile(request, response);
-    } else {
-      super.doGet(request, response);
-    }
-  }
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+	{
+		String parameter = request.getParameter(UConsts.PARAM_REMOVE);
+		if (parameter != null)
+		{
+			try
+			{
+				// Notify classes extending this that they have to remove the
+				// item.
+				removeItem(request, parameter);
+				// Other way to notify classes extending this.
+				FileItem item = super.findFileItem(getMySessionFileItems(request), parameter);
+				if (item != null)
+				{
+					removeItem(request, item);
+				}
+			}
+			catch (Exception e)
+			{
+				renderXmlResponse(request, response, "<" + TAG_ERROR + ">" + e.getMessage() + "</" + TAG_ERROR + ">");
+				return;
+			}
+			// Remove the item saved in session in the case it was not removed
+			// yet
+			super.removeUploadedFile(request, response);
+		}
+		else
+		{
+			super.doGet(request, response);
+		}
+	}
 
-  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-    String error = null;
-    String message = null;
-    Map<String, String> tags = new HashMap<String, String>();
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException
+	{
+		String error = null;
+		String message = null;
+		Map<String, String> tags = new HashMap<String, String>();
+		perThreadRequest.set(request);
+		try
+		{
+			// Receive the files and form elements, updating the progress status
+			error = super.parsePostRequest(request, response);
+			if (error == null)
+			{
+				// Fill files status before executing user code which could
+				// remove session files
+				getFileItemsSummary(request, tags);
+				// Call to the user code
+				message = executeAction(request, getMyLastReceivedFileItems(request));
+			}
+		}
+		catch (UploadCanceledException e)
+		{
+			renderXmlResponse(request, response, "<" + TAG_CANCELED + ">true</" + TAG_CANCELED + ">");
+			return;
+		}
+		catch (UploadActionException e)
+		{
+			logger.info("ExecuteUploadActionException when receiving a file.", e);
+			error = e.getMessage();
+		}
+		catch (Exception e)
+		{
+			logger.info("Unknown Exception when receiving a file.", e);
+			error = e.getMessage();
+		}
+		finally
+		{
+			perThreadRequest.set(null);
+		}
 
-    perThreadRequest.set(request);
-    try {
-      // Receive the files and form elements, updating the progress status
-      error = super.parsePostRequest(request, response);
-      if (error == null) {
-        // Fill files status before executing user code which could remove session files
-        getFileItemsSummary(request, tags);
-        // Call to the user code
-        message = executeAction(request, getMyLastReceivedFileItems(request));
-      }
-    } catch (UploadCanceledException e) {
-      renderXmlResponse(request, response, "<" + TAG_CANCELED + ">true</" + TAG_CANCELED + ">");
-      return;
-    } catch (UploadActionException e) {
-      logger.info("ExecuteUploadActionException when receiving a file.", e);
-      error =  e.getMessage();
-    } catch (Exception e) {
-      logger.info("Unknown Exception when receiving a file.", e);
-      error = e.getMessage();
-    } finally {
-      perThreadRequest.set(null);
-    }
+		String postResponse = null;
+		AbstractUploadListener listener = getCurrentListener(request);
+		if (error != null)
+		{
+			postResponse = "<" + TAG_ERROR + ">" + escapeXml(error) + "</" + TAG_ERROR + ">";
+			renderXmlResponse(request, response, postResponse);
+			if (listener != null)
+			{
+				listener.setException(new RuntimeException(error));
+			}
+			UploadServlet.removeSessionFileItems(request);
+		}
+		else
+		{
+			if (message != null)
+			{
+				tags.put("message", message);
+			}
+			postResponse = statusToString(tags);
+			renderXmlResponse(request, response, postResponse, true);
+		}
+		finish(request, postResponse);
 
-    String postResponse = null;
-    AbstractUploadListener listener = getCurrentListener(request);
-    if (error != null) {
-      postResponse = "<" + TAG_ERROR + ">" + error + "</" + TAG_ERROR + ">";
-      renderXmlResponse(request, response, postResponse);
-      if (listener != null) {
-        listener.setException(new RuntimeException(error));
-      }
-      UploadServlet.removeSessionFileItems(request);
-    } else {
-      if (message != null) {
-        // see issue #139
-        tags.put("message", "<![CDATA[" + message + "]]>");
-      }
-      postResponse = statusToString(tags);
-      renderXmlResponse(request, response, postResponse, true);
-    }
-    finish(request, postResponse);
-
-    if (removeSessionFiles) {
-      removeSessionFileItems(request, removeData);
-    }
-  }
+		if (removeSessionFiles)
+		{
+			removeSessionFileItems(request, removeData);
+		}
+	}
 }
